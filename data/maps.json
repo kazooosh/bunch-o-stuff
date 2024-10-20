@@ -1,0 +1,330 @@
+[
+  {
+    "name": "SNES Mario Circuit 3",
+    "played": false
+  },
+  {
+    "name": "SNES Bowser Castle 3",
+    "played": false
+  },
+  {
+    "name": "SNES Donut Plains 3",
+    "played": false
+  },
+  {
+    "name": "SNES Rainbow Road",
+    "played": false
+  },
+  {
+    "name": "N64 Kalimari Desert",
+    "played": false
+  },
+  {
+    "name": "N64 Toad's Turnpike",
+    "played": false
+  },
+  {
+    "name": "N64 Choco Mountain",
+    "played": false
+  },
+  {
+    "name": "N64 Royal Raceway",
+    "played": false
+  },
+  {
+    "name": "N64 Yoshi Valley",
+    "played": false
+  },
+  {
+    "name": "N64 Rainbow Road",
+    "played": false
+  },
+  {
+    "name": "GBA Riverside Park",
+    "played": false
+  },
+  {
+    "name": "GBA Mario Circuit",
+    "played": true
+  },
+  {
+    "name": "GBA Boo Lake",
+    "played": false
+  },
+  {
+    "name": "GBA Cheese Land",
+    "played": true
+  },
+  {
+    "name": "GBA Sky Garden",
+    "played": false
+  },
+  {
+    "name": "GBA Sunset Wilds",
+    "played": false
+  },
+  {
+    "name": "GBA Snow Land",
+    "played": false
+  },
+  {
+    "name": "GBA Ribbon Road",
+    "played": false
+  },
+  {
+    "name": "GCN Baby Park",
+    "played": false
+  },
+  {
+    "name": "GCN Dry Dry Desert",
+    "played": false
+  },
+  {
+    "name": "GCN Daisy Cruiser",
+    "played": false
+  },
+  {
+    "name": "GCN Waluigi Stadium",
+    "played": false
+  },
+  {
+    "name": "GCN Sherbet Land",
+    "played": false
+  },
+  {
+    "name": "GCN Yoshi Circuit",
+    "played": false
+  },
+  {
+    "name": "GCN DK Mountain",
+    "played": false
+  },
+  {
+    "name": "DS Cheep Cheep Beach",
+    "played": false
+  },
+  {
+    "name": "DS Waluigi Pinball",
+    "played": false
+  },
+  {
+    "name": "DS Shroom Ridge",
+    "played": false
+  },
+  {
+    "name": "DS Tick-Tock Clock",
+    "played": false
+  },
+  {
+    "name": "DS Mario Circuit",
+    "played": false
+  },
+  {
+    "name": "DS Wario Stadium",
+    "played": false
+  },
+  {
+    "name": "DS Peach Gardens",
+    "played": false
+  },
+  {
+    "name": "Wii Moo Moo Meadows",
+    "played": false
+  },
+  {
+    "name": "Wii Mushroom Gorge",
+    "played": false
+  },
+  {
+    "name": "Wii Coconut Mall",
+    "played": false
+  },
+  {
+    "name": "Wii DK Summit",
+    "played": false
+  },
+  {
+    "name": "Wii Wario's Gold Mine",
+    "played": false
+  },
+  {
+    "name": "Wii Daisy Circuit",
+    "played": false
+  },
+  {
+    "name": "Wii Koopa Cape",
+    "played": false
+  },
+  {
+    "name": "Wii Maple Treeway",
+    "played": false
+  },
+  {
+    "name": "Wii Grumble Volcano",
+    "played": false
+  },
+  {
+    "name": "Wii Moonview Highway",
+    "played": false
+  },
+  {
+    "name": "Wii Rainbow Road",
+    "played": false
+  },
+  {
+    "name": "3DS Toad Circuit",
+    "played": false
+  },
+  {
+    "name": "3DS Music Park",
+    "played": false
+  },
+  {
+    "name": "3DS Rock Rock Mountain",
+    "played": false
+  },
+  {
+    "name": "3DS Piranha Plant Slide",
+    "played": false
+  },
+  {
+    "name": "3DS Neo Bowser City",
+    "played": false
+  },
+  {
+    "name": "3DS DK Jungle",
+    "played": false
+  },
+  {
+    "name": "3DS Rosalina's Ice World",
+    "played": false
+  },
+  {
+    "name": "3DS Rainbow Road",
+    "played": false
+  },
+  {
+    "name": "Mario Kart Stadium",
+    "played": false
+  },
+  {
+    "name": "Water Park",
+    "played": false
+  },
+  {
+    "name": "Sweet Sweet Canyon",
+    "played": false
+  },
+  {
+    "name": "Twomp Ruins",
+    "played": false
+  },
+  {
+    "name": "Mario Circuit",
+    "played": false
+  },
+  {
+    "name": "Toad Harbor",
+    "played": false
+  },
+  {
+    "name": "Twisted Mansion",
+    "played": false
+  },
+  {
+    "name": "Shy Guy Falls",
+    "played": true
+  },
+  {
+    "name": "Sunshine Airport",
+    "played": false
+  },
+  {
+    "name": "Dolphin Shoals",
+    "played": false
+  },
+  {
+    "name": "Electrodrome",
+    "played": false
+  },
+  {
+    "name": "Mount Wario",
+    "played": false
+  },
+  {
+    "name": "Cloudtop Cruise",
+    "played": true
+  },
+  {
+    "name": "Bone-Dry Dunes",
+    "played": false
+  },
+  {
+    "name": "Bowser's Castle",
+    "played": false
+  },
+  {
+    "name": "Rainbow Road",
+    "played": false
+  },
+  {
+    "name": "Excitebike Arena",
+    "played": false
+  },
+  {
+    "name": "Dragon Driftway",
+    "played": false
+  },
+  {
+    "name": "Mute City",
+    "played": false
+  },
+  {
+    "name": "Ice Ice Outpost",
+    "played": false
+  },
+  {
+    "name": "Hyrule Circuit",
+    "played": false
+  },
+  {
+    "name": "Wild Woods",
+    "played": false
+  },
+  {
+    "name": "Animal Crossing",
+    "played": false
+  },
+  {
+    "name": "Super Bell Subway",
+    "played": false
+  },
+  {
+    "name": "Big Blue",
+    "played": false
+  },
+  {
+    "name": "Merry Mountain",
+    "played": false
+  },
+  {
+    "name": "Ninja Hideaway",
+    "played": false
+  },
+  {
+    "name": "Sky-High Sundae",
+    "played": false
+  },
+  {
+    "name": "Piranha Plant Cove",
+    "played": false
+  },
+  {
+    "name": "Yoshi's Island",
+    "played": false
+  },
+  {
+    "name": "Squeaky Clean Sprint",
+    "played": false
+  }
+]
