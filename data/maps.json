@@ -13,7 +13,7 @@
   },
   {
     "name": "SNES Rainbow Road",
-    "played": false
+    "played": true
   },
   {
     "name": "N64 Kalimari Desert",
@@ -45,7 +45,7 @@
   },
   {
     "name": "GBA Mario Circuit",
-    "played": true
+    "played": false
   },
   {
     "name": "GBA Boo Lake",
@@ -53,7 +53,7 @@
   },
   {
     "name": "GBA Cheese Land",
-    "played": true
+    "played": false
   },
   {
     "name": "GBA Sky Garden",
@@ -81,7 +81,7 @@
   },
   {
     "name": "GCN Daisy Cruiser",
-    "played": false
+    "played": true
   },
   {
     "name": "GCN Waluigi Stadium",
@@ -101,7 +101,7 @@
   },
   {
     "name": "DS Cheep Cheep Beach",
-    "played": false
+    "played": true
   },
   {
     "name": "DS Waluigi Pinball",
@@ -125,7 +125,7 @@
   },
   {
     "name": "DS Peach Gardens",
-    "played": false
+    "played": true
   },
   {
     "name": "Wii Moo Moo Meadows",
@@ -233,7 +233,7 @@
   },
   {
     "name": "Shy Guy Falls",
-    "played": true
+    "played": false
   },
   {
     "name": "Sunshine Airport",
@@ -253,7 +253,7 @@
   },
   {
     "name": "Cloudtop Cruise",
-    "played": true
+    "played": false
   },
   {
     "name": "Bone-Dry Dunes",

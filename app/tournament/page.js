@@ -20,14 +20,39 @@ const Tournament = () => {
   const [selectedMaps, setSelectedMaps] = useState([]);
   const [numMaps, setNumMaps] = useState(12);
   const [players, setPlayers] = useState([]);
-  const [newPlayer, setNewPlayer] = useState('');
   const [playedMaps, setPlayedMaps] = useState([]);
   const [results, setResults] = useState([]);
   const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false);
+  const [playerName, setPlayerName] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    async function fetchPlayers() {
+      try {
+        const response = await fetch('/api/tournament');
+        if (!response.ok) {
+          throw new Error('Failed to fetch players');
+        }
+        const data = await response.json();
+        console.log('Fetched data:', data);
+        setPlayers(Array.isArray(data.players) ? data.players : []);
+      } catch (error) {
+        console.error('Error fetching players:', error);
+        setPlayers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  
+    fetchPlayers();
+
     loadMapData();
+    loadPlayers();
   }, []);
+
+  useEffect(() => {
+    console.log('Initial players state:', players);
+  }, [players]);
 
   const loadMapData = async () => {
     try {
@@ -40,7 +65,17 @@ const Tournament = () => {
     }
   };
 
-  const toggleMap = (index) => {
+  const loadPlayers = async () => {
+    try {
+      const response = await fetch('/api/tournament');
+      const data = await response.json();
+      setPlayers(data.players);
+    } catch (error) {
+      console.error('Failed to load player data:', error);
+    }
+  };
+
+  const toggleMap = async (index) => {
     const newMapData = [...mapData];
     newMapData[index].played = !selectedMaps[index];
     setMapData(newMapData);
@@ -48,6 +83,25 @@ const Tournament = () => {
     const newSelectedMaps = [...selectedMaps];
     newSelectedMaps[index] = !newSelectedMaps[index];
     setSelectedMaps(newSelectedMaps);
+
+    try {
+      const response = await fetch('/api/maps', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newMapData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update map data');
+      }
+    } catch (error) {
+      console.error('Error updating map data:', error);
+      alert('Failed to update map data');
+    }
+
+    saveTournamentData();
   };
 
   const resetMaps = async (played) => {
@@ -75,10 +129,74 @@ const Tournament = () => {
     }
   };
 
-  const addPlayer = () => {
-    if (newPlayer.trim()) {
-      setPlayers([...players, { name: newPlayer.trim(), results: [] }]);
-      setNewPlayer('');
+  
+  async function addPlayer(event) {
+    console.log('addPlayer function called');
+    event.preventDefault();
+    console.log('Player name:', playerName);
+  
+    if (playerName && playerName.trim()) {
+      const currentPlayers = Array.isArray(players) ? players : [];
+      const newPlayers = [...currentPlayers, { name: playerName.trim(), score: 0 }];
+      console.log('New players after adding:', newPlayers);
+      setPlayers(newPlayers);
+      setPlayerName(''); // Clear the input field
+  
+      try {
+        console.log('Sending POST request to /api/tournament');
+        const response = await fetch('/api/tournament', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ players: newPlayers }),
+        });
+  
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to update player data: ${response.status} ${response.statusText}. ${errorText}`);
+        }
+  
+        const result = await response.json();
+        console.log(result.message);
+      } catch (error) {
+        console.error('Error updating player data:', error);
+      }
+    } else {
+      console.log('Player name is empty or null');
+    }
+  }
+
+  const saveTournamentData = async () => {
+    const tournamentData = {
+      playedMaps: playedMaps.map(map => map.name),
+      results: playedMaps.map((map, mapIndex) => ({
+        mapName: map.name,
+        playerResults: players.map((player, playerIndex) => ({
+          playerName: player.name,
+          position: results[mapIndex]?.[playerIndex] || 0
+        }))
+      })),
+      players: calculateFinalResults(),
+      date: new Date().toISOString(),
+    };
+  
+    try {
+      const response = await fetch('/api/tournament', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tournamentData),
+      });
+  
+      if (response.ok) {
+        console.log('Tournament data saved successfully!');
+      } else {
+        throw new Error('Failed to save tournament data');
+      }
+    } catch (error) {
+      console.error('Error saving tournament data:', error);
     }
   };
 
@@ -106,41 +224,30 @@ const Tournament = () => {
     }
     newResults[mapIndex][playerIndex] = position;
     setResults(newResults);
-
-    const remainingPositions = Array.from({length: players.length}, (_, i) => i + 1)
-      .filter(pos => !newResults[mapIndex].includes(pos));
-    if (remainingPositions.length === 1) {
-      const lastPlayerIndex = newResults[mapIndex].findIndex(pos => pos === 0);
-      if (lastPlayerIndex !== -1) {
-        newResults[mapIndex][lastPlayerIndex] = remainingPositions[0];
-        setResults(newResults);
-      }
-    }
   };
 
   const calculateFinalResults = () => {
-    const finalResults = players.map(player => ({
-      name: player.name,
-      positions: Array(players.length).fill(0)
-    }));
+    const scoreSystem = [15, 12, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 
+    const finalResults = players && players.length > 0
+      ? players.map(player => ({
+          name: player.name,
+          positions: Array(players.length).fill(0),
+          totalScore: 0
+        }))
+      : [];
+  
     results.forEach(mapResult => {
       mapResult.forEach((position, playerIndex) => {
         if (position > 0) {
           finalResults[playerIndex].positions[position - 1]++;
+          finalResults[playerIndex].totalScore += scoreSystem[position - 1] || 0;
         }
       });
     });
-
-    finalResults.sort((a, b) => {
-      for (let i = 0; i < players.length; i++) {
-        if (a.positions[i] !== b.positions[i]) {
-          return b.positions[i] - a.positions[i];
-        }
-      }
-      return 0;
-    });
-
+  
+    finalResults.sort((a, b) => b.totalScore - a.totalScore);
+  
     return finalResults;
   };
 
@@ -171,49 +278,6 @@ const Tournament = () => {
     navigator.clipboard.writeText(text).then(() => {
       alert('Copied to clipboard!');
     });
-  };
-
-  const saveTournamentData = async () => {
-    const tournamentData = {
-      playedMaps: playedMaps.map(map => map.name),
-      results: results,
-      players: players,
-    };
-
-    try {
-      const response = await fetch('/api/saveTournament', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(tournamentData),
-      });
-
-      if (response.ok) {
-        // Update mapData with new played status
-        const newMapData = mapData.map(map => ({
-          ...map,
-          played: playedMaps.some(playedMap => playedMap.name === map.name)
-        }));
-        setMapData(newMapData);
-
-        // Save updated map data
-        await fetch('/api/maps', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newMapData),
-        });
-
-        alert('Tournament data saved successfully!');
-      } else {
-        throw new Error('Failed to save tournament data');
-      }
-    } catch (error) {
-      console.error('Error saving tournament data:', error);
-      alert('Failed to save tournament data');
-    }
   };
 
   return (
@@ -285,25 +349,32 @@ const Tournament = () => {
           <div className="bg-white bg-opacity-10 rounded-lg p-4 sm:p-6">
             <h2 className="text-xl font-semibold mb-4">Players</h2>
             <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
-              <input
-                type="text"
-                value={newPlayer}
-                onChange={(e) => setNewPlayer(e.target.value)}
-                placeholder="Enter player name"
-                className="mb-2 sm:mb-0 sm:mr-4 p-2 bg-white bg-opacity-20 text-white w-full sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <button 
-                onClick={addPlayer}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-full w-full sm:w-auto hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                Add Player
-              </button>
+              <form onSubmit={addPlayer}>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="Enter player name"
+                  className="mb-2 sm:mb-0 sm:mr-4 p-2 bg-white bg-opacity-20 text-white w-full sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button 
+                  type="submit"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-full w-full sm:w-auto hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    Add Player
+                </button>
+              </form>
             </div>
-            <ul className="list-disc list-inside">
-              {players.map((player, index) => (
-                <li key={index}>{player.name}</li>
-              ))}
-            </ul>
+            {isLoading ? (
+              <p>Loading tournament data...</p>
+            ) : players && players.length > 0 ? (
+              <ul className="list-disc list-inside">
+                {players.map((player, index) => (
+                  <li key={index}>{player.name}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No players found in the latest tournament.</p>
+            )}
           </div>
 
           <button 
