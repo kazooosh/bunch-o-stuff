@@ -34,7 +34,6 @@ const Tournament = () => {
           throw new Error('Failed to fetch players');
         }
         const data = await response.json();
-        console.log('Fetched data:', data);
         setPlayers(Array.isArray(data.players) ? data.players : []);
       } catch (error) {
         console.error('Error fetching players:', error);
@@ -49,10 +48,6 @@ const Tournament = () => {
     loadMapData();
     loadPlayers();
   }, []);
-
-  useEffect(() => {
-    console.log('Initial players state:', players);
-  }, [players]);
 
   const loadMapData = async () => {
     try {
@@ -128,77 +123,51 @@ const Tournament = () => {
       alert('Failed to update map data');
     }
   };
-
   
-  async function addPlayer(event) {
+  function addPlayer(event) {
     console.log('addPlayer function called');
     event.preventDefault();
+    
+    // Get the player name from the input field
+    const playerNameInput = event.target.elements.playerName;
+    const playerName = playerNameInput.value.trim();
     console.log('Player name:', playerName);
   
-    if (playerName && playerName.trim()) {
+    if (playerName) {
       const currentPlayers = Array.isArray(players) ? players : [];
-      const newPlayers = [...currentPlayers, { name: playerName.trim(), score: 0 }];
-      console.log('New players after adding:', newPlayers);
+      const newPlayers = [...currentPlayers, { name: playerName, score: 0 }];
       setPlayers(newPlayers);
-      setPlayerName(''); // Clear the input field
-  
-      try {
-        console.log('Sending POST request to /api/tournament');
-        const response = await fetch('/api/tournament', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ players: newPlayers }),
-        });
-  
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to update player data: ${response.status} ${response.statusText}. ${errorText}`);
-        }
-  
-        const result = await response.json();
-        console.log(result.message);
-      } catch (error) {
-        console.error('Error updating player data:', error);
-      }
+      
+      // Clear the input field
+      playerNameInput.value = '';
+      
+      console.log('New players after adding:', newPlayers);
+      console.log('Player added locally. Use Save Tournament Data to persist changes.');
     } else {
-      console.log('Player name is empty or null');
+      console.log('Player name is empty');
     }
   }
 
-  const saveTournamentData = async () => {
-    const tournamentData = {
-      playedMaps: playedMaps.map(map => map.name),
-      results: playedMaps.map((map, mapIndex) => ({
-        mapName: map.name,
-        playerResults: players.map((player, playerIndex) => ({
-          playerName: player.name,
-          position: results[mapIndex]?.[playerIndex] || 0
-        }))
-      })),
-      players: calculateFinalResults(),
-      date: new Date().toISOString(),
-    };
-  
+  async function saveTournamentData() {
     try {
       const response = await fetch('/api/tournament', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(tournamentData),
+        body: JSON.stringify({ players, playedMaps, results }),
       });
   
-      if (response.ok) {
-        console.log('Tournament data saved successfully!');
-      } else {
+      if (!response.ok) {
         throw new Error('Failed to save tournament data');
       }
+  
+      const result = await response.json();
+      console.log(result.message);
     } catch (error) {
       console.error('Error saving tournament data:', error);
     }
-  };
+  }
 
   const selectRandomMaps = () => {
     if (window.confirm('Are you sure you want to generate new maps? This will clear current player stats.')) {
@@ -352,10 +321,11 @@ const Tournament = () => {
               <form onSubmit={addPlayer}>
                 <input
                   type="text"
-                  value={playerName}
+                  name="playerName"
                   onChange={(e) => setPlayerName(e.target.value)}
                   placeholder="Enter player name"
                   className="mb-2 sm:mb-0 sm:mr-4 p-2 bg-white bg-opacity-20 text-white w-full sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
                 />
                 <button 
                   type="submit"
@@ -389,7 +359,7 @@ const Tournament = () => {
           {playedMaps.length > 0 && (
             <div className="bg-white bg-opacity-10 rounded-lg p-4 sm:p-6">
               <h2 className="text-xl font-semibold mb-4">Played Maps</h2>
-              <ul className="space-y-4 max-h-96 overflow-y-auto">
+              <ul className="space-y-4 overflow-y-auto">
                 {playedMaps.map((map, mapIndex) => (
                   <li key={mapIndex} className="bg-white bg-opacity-5 p-3 rounded-lg">
                     <h3 className="text-lg font-semibold">{mapIndex + 1}. {map.name}</h3>
