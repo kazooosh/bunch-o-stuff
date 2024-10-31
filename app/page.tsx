@@ -8,6 +8,7 @@ export default function Home() {
           <a className="m-2" href="about">About</a>
           <a className="m-2"href="tournament">Tournament</a>
           <a className="m-2"href="mint">Mint</a>
+          <a className="m-2"href="stats">Stats</a>
         </div>
         <Image
           className="dark:invert"
