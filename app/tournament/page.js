@@ -23,7 +23,6 @@ const Tournament = () => {
   const [playedMaps, setPlayedMaps] = useState([]);
   const [results, setResults] = useState([]);
   const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false);
-  const [playerName, setPlayerName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -322,7 +321,6 @@ const Tournament = () => {
                 <input
                   type="text"
                   name="playerName"
-                  onChange={(e) => setPlayerName(e.target.value)}
                   placeholder="Enter player name"
                   className="mb-2 sm:mb-0 sm:mr-4 p-2 bg-white bg-opacity-20 text-white w-full sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
