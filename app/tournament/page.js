@@ -20,132 +20,139 @@ const Tournament = () => {
   const [selectedMaps, setSelectedMaps] = useState([]);
   const [numMaps, setNumMaps] = useState(12);
   const [players, setPlayers] = useState([]);
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [playedMaps, setPlayedMaps] = useState([]);
   const [results, setResults] = useState([]);
   const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchPlayers() {
-      try {
-        const response = await fetch('/api/tournament');
-        if (!response.ok) {
-          throw new Error('Failed to fetch players');
-        }
-        const data = await response.json();
-        setPlayers(Array.isArray(data.players) ? data.players : []);
-      } catch (error) {
-        console.error('Error fetching players:', error);
-        setPlayers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  
     fetchPlayers();
-
-    loadMapData();
-    loadPlayers();
+    fetchMapData();
+    setIsLoading(false);
   }, []);
 
-  const loadMapData = async () => {
+  const fetchMapData = async () => {
     try {
       const response = await fetch('/api/maps');
-      const data = await response.json();
-      setMapData(data);
-      setSelectedMaps(data.map(map => !map.played));
+      const maps = await response.json();
+  
+      maps.sort((a, b) => a.id - b.id);
+  
+      setMapData(maps);
+      setSelectedMaps(maps.map((map) => !map.played));
     } catch (error) {
       console.error('Failed to load map data:', error);
     }
   };
 
-  const loadPlayers = async () => {
+  const fetchPlayers = async () => {
     try {
-      const response = await fetch('/api/tournament');
+      const response = await fetch('/api/players');
+      if (!response.ok) {
+        throw new Error('Failed to fetch players');
+      }
       const data = await response.json();
-      setPlayers(data.players);
+      setPlayers(data || []);
+      setSelectedPlayers(new Array(data.length).fill(true)); // Initialize with true
     } catch (error) {
-      console.error('Failed to load player data:', error);
+      console.error('Error fetching players:', error);
+      setPlayers([]);
     }
   };
 
-  const toggleMap = async (index) => {
-    const newMapData = [...mapData];
-    newMapData[index].played = !selectedMaps[index];
-    setMapData(newMapData);
-
-    const newSelectedMaps = [...selectedMaps];
-    newSelectedMaps[index] = !newSelectedMaps[index];
-    setSelectedMaps(newSelectedMaps);
-
+  async function toggleMap(id, played) {
     try {
-      const response = await fetch('/api/maps', {
-        method: 'POST',
+      const updatedMap = { played: !played };
+  
+      const response = await fetch(`/api/maps/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newMapData),
+        body: JSON.stringify(updatedMap),
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to update map data');
       }
+  
+      const updatedMapData = mapData.map(map =>
+        map.id === id ? { ...map, played: !map.played } : map
+      );
+  
+      setMapData(updatedMapData);
+      setSelectedMaps(updatedMapData.map(map => !map.played));
+  
+      const result = await response.json();
+      console.log(result.message);
     } catch (error) {
       console.error('Error updating map data:', error);
-      alert('Failed to update map data');
     }
-
-    saveTournamentData();
-  };
+  }
 
   const resetMaps = async (played) => {
-    const newMapData = mapData.map(map => ({ ...map, played }));
-    setMapData(newMapData);
-    setSelectedMaps(newMapData.map(map => !map.played));
+    const updatedMaps = mapData.map(map => ({ ...map, played }));
+    setMapData(updatedMaps);
+    setSelectedMaps(updatedMaps.map(map => !map.played));
 
     try {
-      const response = await fetch('/api/maps', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newMapData),
-      });
-
-      if (response.ok) {
-        alert(played ? 'All maps set as played' : 'All maps reset');
-      } else {
-        throw new Error('Failed to update map data');
+      for (const map of updatedMaps) {
+        await fetch('/api/maps', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(map),
+        });
       }
+
+      alert(played ? 'All maps set as played' : 'All maps reset');
     } catch (error) {
       console.error('Error updating map data:', error);
       alert('Failed to update map data');
     }
   };
-  
-  function addPlayer(event) {
-    console.log('addPlayer function called');
+
+  const togglePlayerSelection = (index) => {
+    const updatedSelectedPlayers = [...selectedPlayers];
+    updatedSelectedPlayers[index] = !updatedSelectedPlayers[index];
+    setSelectedPlayers(updatedSelectedPlayers);
+  };
+
+  const addPlayer = async (event) => {
     event.preventDefault();
-    
-    // Get the player name from the input field
     const playerNameInput = event.target.elements.playerName;
     const playerName = playerNameInput.value.trim();
-    console.log('Player name:', playerName);
-  
+    
     if (playerName) {
-      const currentPlayers = Array.isArray(players) ? players : [];
-      const newPlayers = [...currentPlayers, { name: playerName, score: 0 }];
-      setPlayers(newPlayers);
+      const newPlayer = { name: playerName, score: 0 };
+      console.log('Submitting new player:', newPlayer);
       
-      // Clear the input field
-      playerNameInput.value = '';
-      
-      console.log('New players after adding:', newPlayers);
-      console.log('Player added locally. Use Save Tournament Data to persist changes.');
+      try {
+        const response = await fetch('/api/players', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newPlayer),
+        });
+  
+        if (response.ok) {
+          setPlayers((prevPlayers) => [...prevPlayers, newPlayer]);
+          setSelectedPlayers((prevSelectedPlayers) => [...prevSelectedPlayers, true]);
+          playerNameInput.value = '';
+        } else {
+          throw new Error('Failed to add player');
+        }
+      } catch (error) {
+        console.error('Error adding player:', error);
+        alert('Failed to add player');
+      }
     } else {
       console.log('Player name is empty');
     }
-  }
+  };
 
   async function saveTournamentData() {
     try {
@@ -156,11 +163,11 @@ const Tournament = () => {
         },
         body: JSON.stringify({ players, playedMaps, results }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to save tournament data');
       }
-  
+
       const result = await response.json();
       console.log(result.message);
     } catch (error) {
@@ -197,14 +204,12 @@ const Tournament = () => {
   const calculateFinalResults = () => {
     const scoreSystem = [15, 12, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 
-    const finalResults = players && players.length > 0
-      ? players.map(player => ({
-          name: player.name,
-          positions: Array(players.length).fill(0),
-          totalScore: 0
-        }))
-      : [];
-  
+    const finalResults = players.map(player => ({
+      name: player.name,
+      positions: Array(players.length).fill(0),
+      totalScore: 0
+    }));
+
     results.forEach(mapResult => {
       mapResult.forEach((position, playerIndex) => {
         if (position > 0) {
@@ -213,9 +218,9 @@ const Tournament = () => {
         }
       });
     });
-  
+
     finalResults.sort((a, b) => b.totalScore - a.totalScore);
-  
+    
     return finalResults;
   };
 
@@ -264,23 +269,23 @@ const Tournament = () => {
             {isMapSelectionOpen && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
-                  {mapData.map((map, index) => (
-                    <div key={map.name} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`map-${index}`}
-                        checked={selectedMaps[index]}
-                        onChange={() => toggleMap(index)}
-                        className="mr-2 form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                      />
-                      <label 
-                        htmlFor={`map-${index}`}
-                        className={`text-sm ${selectedMaps[index] ? 'text-white' : 'text-gray-400'}`}
-                      >
-                        {map.name}
-                      </label>
-                    </div>
-                  ))}
+                {mapData.map((map, index) => (
+                  <div key={map.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`map-${index}`}
+                      checked={!map.played}
+                      onChange={() => toggleMap(map.id, map.played)}
+                      className="mr-2 form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
+                    />
+                    <label
+                      htmlFor={`map-${index}`}
+                      className={`text-sm ${map.played ? 'text-white' : 'text-gray-400'}`}
+                    >
+                      {map.name}
+                    </label>
+                  </div>
+                ))}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button 
@@ -304,9 +309,9 @@ const Tournament = () => {
             <h2 className="text-xl font-semibold mb-4">Number of Maps</h2>
             <input
               type="range"
-              min={4}
+              min={1}
               max={20}
-              step={2}
+              step={1}
               value={numMaps}
               onChange={(e) => setNumMaps(parseInt(e.target.value))}
               className="w-full max-w-xs accent-indigo-600"
@@ -316,33 +321,37 @@ const Tournament = () => {
 
           <div className="bg-white bg-opacity-10 rounded-lg p-4 sm:p-6">
             <h2 className="text-xl font-semibold mb-4">Players</h2>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
-              <form onSubmit={addPlayer}>
-                <input
-                  type="text"
-                  name="playerName"
-                  placeholder="Enter player name"
-                  className="mb-2 sm:mb-0 sm:mr-4 p-2 bg-white bg-opacity-20 text-white w-full sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-                <button 
-                  type="submit"
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-full w-full sm:w-auto hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Add Player
-                </button>
-              </form>
+            <div className="flex flex-col items-start mb-4">
+              {(players || []).map((player, index) => (
+                <div key={index} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    id={`player-${index}`}
+                    checked={selectedPlayers[index]}
+                    onChange={() => togglePlayerSelection(index)}
+                    className="mr-2 form-checkbox h-4 w-4 text-indigo-600"
+                  />
+                  <label htmlFor={`player-${index}`} className="text-white">
+                    {player.name}
+                  </label>
+                </div>
+              ))}
             </div>
-            {isLoading ? (
-              <p>Loading tournament data...</p>
-            ) : players && players.length > 0 ? (
-              <ul className="list-disc list-inside">
-                {players.map((player, index) => (
-                  <li key={index}>{player.name}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>No players found in the latest tournament.</p>
-            )}
+            <form onSubmit={addPlayer}>
+              <input
+                type="text"
+                name="playerName"
+                placeholder="Enter player name"
+                className="mb-2 sm:mb-0 sm:mr-4 p-2 bg-white bg-opacity-20 text-white w-full sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+              <button 
+                type="submit"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-full w-full sm:w-auto hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                  Add Player
+              </button>
+            </form>
+            {isLoading && <p>Loading tournament data...</p>}
           </div>
 
           <button 
@@ -412,36 +421,36 @@ const Tournament = () => {
               <button 
                 onClick={() => copyToClipboard(getPlayedMapsOutput())}
                 className="bg-indigo-600 text-white px-3 py-1 text-sm rounded-full hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  Copy Played Maps
+                </button>
+                <button 
+                  onClick={() => copyToClipboard(getDetailedResultsOutput())}
+                  className="bg-indigo-600 text-white px-3 py-1 text-sm rounded-full hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  Copy Detailed Results
+                </button>
+              </div>
+            </div>
+  
+            <div className="flex flex-wrap gap-2">
+              <button 
+                onClick={saveTournamentData}
+                className="bg-green-600 text-white px-4 py-2 rounded-full text-sm hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                Copy Played Maps
+                Save Tournament Data
               </button>
               <button 
-                onClick={() => copyToClipboard(getDetailedResultsOutput())}
-                className="bg-indigo-600 text-white px-3 py-1 text-sm rounded-full hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                onClick={resetTournament}
+                className="bg-red-600 text-white px-4 py-2 rounded-full text-sm hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
-                Copy Detailed Results
+                Reset Tournament
               </button>
             </div>
           </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button 
-              onClick={saveTournamentData}
-              className="bg-green-600 text-white px-4 py-2 rounded-full text-sm hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-            >
-              Save Tournament Data
-            </button>
-            <button 
-              onClick={resetTournament}
-              className="bg-red-600 text-white px-4 py-2 rounded-full text-sm hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              Reset Tournament
-            </button>
-          </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-export default Tournament;
+    );
+  };
+  
+  export default Tournament;

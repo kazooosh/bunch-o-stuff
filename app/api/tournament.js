@@ -9,14 +9,11 @@ export default function handler(req, res) {
       const timestamp = new Date().toISOString().replace(/:/g, '-');
       const fileName = `tournament_${timestamp}.json`;
       const filePath = path.join(process.cwd(), 'data', fileName);
-      
-      // Ensure the data directory exists
       const dataDir = path.join(process.cwd(), 'data');
       if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir);
       }
 
-      // Write the data to the new file
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
       res.status(200).json({ message: 'Tournament data saved successfully' });

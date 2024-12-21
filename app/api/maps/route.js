@@ -1,14 +1,11 @@
-// app/api/tournament/route.js
+// app/api/maps/route.js
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import db from '../../utils/db';
 
 export async function GET() {
   try {
-    const filePath = path.join(process.cwd(), 'data', 'maps.json');
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-    const maps = JSON.parse(fileContent);
-    return NextResponse.json(maps);
+    const result = await db.query('SELECT * FROM maps');
+    return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error reading maps data:', error);
     return NextResponse.json({ error: 'Failed to load map data' }, { status: 500 });
@@ -17,20 +14,24 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    const tournamentData = await req.json();
-    const date = new Date().toISOString().split('T')[0];
-    const fileName = `tournament_${date}.json`;
-    const filePath = path.join(process.cwd(), 'data', fileName);
-    
-    // Save the tournament data with the date included
-    await fs.writeFile(filePath, JSON.stringify({ ...tournamentData, date }, null, 2));
-    
-    // Also update the lastTournament.json file
-    const lastTournamentPath = path.join(process.cwd(), 'data', 'lastTournament.json');
-    await fs.writeFile(lastTournamentPath, JSON.stringify({ ...tournamentData, date }, null, 2));
-    return NextResponse.json({ message: 'Tournament data saved successfully', fileName });
+    const mapData = await req.json();
+
+    if (!mapData.name) {
+      return NextResponse.json({ error: 'Map name is required' }, { status: 400 });
+    }
+
+    const query = `
+      INSERT INTO maps (name, played)
+      VALUES ($1, $2)
+      RETURNING *
+    `;
+
+    const values = [mapData.name, mapData.played || false];
+    const result = await db.query(query, values);
+
+    return NextResponse.json({ message: 'Map data saved successfully', data: result.rows[0] });
   } catch (error) {
-    console.error('Error saving tournament data:', error);
-    return NextResponse.json({ error: 'Failed to save tournament data' }, { status: 500 });
+    console.error('Error saving map data:', error);
+    return NextResponse.json({ error: 'Failed to save map data' }, { status: 500 });
   }
 }

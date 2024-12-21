@@ -1,27 +1,34 @@
 // app/api/tournament/route.js
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import db from '../../utils/db';
 
-export async function POST(request) {
+export async function GET() {
   try {
-    const data = await request.json();
-    const timestamp = new Date().toISOString().replace(/:/g, '-');
-    const fileName = `tournament_${timestamp}.json`;
-    const filePath = path.join(process.cwd(), 'data', fileName);
-    
-    // Ensure the data directory exists
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir);
-    }
+    const res = await db.query('SELECT * FROM tournaments ORDER BY date DESC');
+    return NextResponse.json(res.rows);
+  } catch (error) {
+    console.error('Error fetching tournaments data:', error);
+    return NextResponse.json({ error: 'Failed to load tournaments data' }, { status: 500 });
+  }
+}
 
-    // Write the data to the new file
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+export async function POST(req) {
+  try {
+    const tournamentData = await req.json();
+    const date = new Date().toISOString().split('T')[0];
 
-    return NextResponse.json({ message: 'Tournament data saved successfully' }, { status: 200 });
+    const query = `
+      INSERT INTO tournaments (data, date)
+      VALUES ($1, $2)
+      RETURNING *
+    `;
+
+    const values = [JSON.stringify(tournamentData), date];
+    const res = await db.query(query, values);
+
+    return NextResponse.json({ message: 'Tournament data saved successfully', data: res.rows[0] });
   } catch (error) {
     console.error('Error saving tournament data:', error);
-    return NextResponse.json({ message: `Error saving tournament data: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save tournament data' }, { status: 500 });
   }
 }

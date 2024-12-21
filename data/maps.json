@@ -13,7 +13,7 @@
   },
   {
     "name": "SNES Rainbow Road",
-    "played": true
+    "played": false
   },
   {
     "name": "N64 Kalimari Desert",
@@ -81,7 +81,7 @@
   },
   {
     "name": "GCN Daisy Cruiser",
-    "played": true
+    "played": false
   },
   {
     "name": "GCN Waluigi Stadium",
@@ -101,7 +101,7 @@
   },
   {
     "name": "DS Cheep Cheep Beach",
-    "played": true
+    "played": false
   },
   {
     "name": "DS Waluigi Pinball",
@@ -125,7 +125,7 @@
   },
   {
     "name": "DS Peach Gardens",
-    "played": true
+    "played": false
   },
   {
     "name": "Wii Moo Moo Meadows",
