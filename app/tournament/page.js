@@ -156,20 +156,38 @@ const Tournament = () => {
 
   async function saveTournamentData() {
     try {
+      const dataToSend = {
+        players,
+        maps: playedMaps,
+        results,
+      };
+      
       const response = await fetch('/api/tournament', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ players, playedMaps, results }),
+        body: JSON.stringify(dataToSend),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to save tournament data');
+        throw new Error(`Failed to save tournament data: ${response.status}`);
       }
-
-      const result = await response.json();
-      console.log(result.message);
+  
+      for (const map of playedMaps) {
+        const updateResponse = await fetch(`/api/maps/${map.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ played: true }),
+        });
+  
+        if (!updateResponse.ok) {
+          console.error(`Failed to update status for map with ID: ${map.id}`, map);
+        } else {
+          console.log(`Map '${map.name}' updated to played successfully.`);
+        }
+      }
+    
     } catch (error) {
       console.error('Error saving tournament data:', error);
     }
